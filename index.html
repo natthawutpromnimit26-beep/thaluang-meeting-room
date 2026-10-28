@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบจองห้องประชุมออนไลน์ | วิทยาลัยเทคนิคท่าหลวงซิเมนต์ไทยอนุสรณ์</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome 6 CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- FullCalendar CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- SweetAlert2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/styles.css">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            thaluang: {
+              red: '#c81e1e',
+              'red-dark': '#991b1b',
+              'red-light': '#fee2e2',
+              blue: '#0284c7',
+              'blue-dark': '#0369a1',
+              'blue-light': '#e0f2fe',
+              yellow: '#f59e0b',
+              'yellow-dark': '#d97706',
+              'yellow-light': '#fef3c7',
+              gold: '#eab308'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-full flex flex-col bg-slate-50 text-slate-800">
+
+  <!-- ================= TOP NOTIFICATION / MARQUEE ================= -->
+  <div class="bg-gradient-to-r from-red-700 via-sky-700 to-amber-600 text-white text-xs py-1.5 px-4 shadow-sm">
+    <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+      <div class="flex items-center space-x-2">
+        <span class="bg-amber-400 text-slate-900 font-bold px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider animate-pulse">ประกาศ</span>
+        <span class="truncate">ยินดีต้อนรับสู่ระบบจองห้องประชุมออนไลน์ วิทยาลัยเทคนิคท่าหลวงซิเมนต์ไทยอนุสรณ์ ศูนย์ดิจิทัลและสื่อสารองค์กร</span>
+      </div>
+      <div class="flex items-center space-x-4 text-slate-100">
+        <span id="current-thai-time"><i class="far fa-clock mr-1 text-amber-300"></i> กำลังโหลดเวลา...</span>
+        <button id="soundToggleBtn" onclick="soundManager.toggleSound()" class="hover:text-amber-300 transition-colors flex items-center" title="เปิด/ปิดเสียงเอฟเฟกต์">
+          <i id="soundIcon" class="fas fa-volume-up mr-1 text-amber-300"></i> <span id="soundText" class="hidden sm:inline">เสียงเปิด</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MAIN HEADER ================= -->
+  <header class="bg-white border-b-4 border-amber-500 shadow-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center py-3">
+        <!-- Logo & College Name -->
+        <div class="flex items-center space-x-3.5">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-red-600 via-sky-600 to-amber-500 p-0.5 shadow-md flex items-center justify-center">
+            <div class="w-full h-full bg-white rounded-[10px] flex items-center justify-center">
+              <i class="fas fa-landmark text-2xl text-red-600"></i>
+            </div>
+          </div>
+          <div>
+            <h1 class="text-base sm:text-lg font-bold text-red-700 leading-tight">
+              วิทยาลัยเทคนิคท่าหลวงซิเมนต์ไทยอนุสรณ์
+            </h1>
+            <p class="text-xs sm:text-sm text-sky-800 font-medium flex items-center">
+              <span>Smart Meeting Room Booking System</span>
+              <span class="mx-2 hidden sm:inline text-slate-300">|</span>
+              <span class="hidden sm:inline text-amber-600 font-semibold">ระบบจองห้องประชุมออนไลน์</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Quick Action & Status -->
+        <div class="flex items-center space-x-2 sm:space-x-2.5">
+          <button onclick="openGoogleSheetsViewer()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 sm:px-3.5 py-2 rounded-lg font-semibold shadow-sm transition-all flex items-center text-xs sm:text-sm" title="เปิดดูตาราง Google Sheets สด">
+            <i class="fab fa-google-drive mr-1.5 text-emerald-200"></i>
+            <span>ดู Google Sheets</span>
+          </button>
+
+          <button onclick="switchTab('booking-form')" class="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-3 sm:px-4 py-2 rounded-lg font-medium shadow-sm transition-all flex items-center text-xs sm:text-sm">
+            <i class="fas fa-calendar-plus mr-1.5"></i>
+            <span>จองห้องทันที</span>
+          </button>
+          
+          <button onclick="switchTab('approval-workflow')" class="relative bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-300 px-3 py-2 rounded-lg font-medium transition-all text-xs sm:text-sm flex items-center">
+            <i class="fas fa-clipboard-check mr-1.5 text-sky-600"></i>
+            <span class="hidden md:inline">รออนุมัติ</span>
+            <span id="pendingBadgeHeader" class="ml-1 bg-amber-500 text-white text-[11px] font-bold px-1.5 py-0.2 rounded-full">0</span>
+          </button>
+
+          <!-- Settings Button (แทนการแสดงเมนูบนแถบแท็บ) -->
+          <button onclick="openSettingsView()" class="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors flex items-center space-x-1" title="การตั้งค่าระบบ & Google Sheets / Webhook">
+            <i class="fas fa-cog text-base"></i>
+            <span class="hidden lg:inline text-xs font-medium">ตั้งค่า</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs (5 เมนูหลัก โดยเมนูตั้งค่า/Google Sheets เข้าผ่านปุ่ม Setting) -->
+      <nav class="flex space-x-1 sm:space-x-2 overflow-x-auto pb-1 text-xs sm:text-sm font-medium border-t border-slate-100 pt-2 no-scrollbar" id="navTabs">
+        <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="nav-tab active-tab px-3.5 py-2 rounded-lg flex items-center space-x-1.5 transition-all text-red-700 bg-red-50 border-b-2 border-red-600 font-semibold whitespace-nowrap">
+          <i class="fas fa-chart-pie text-red-600"></i>
+          <span>แดชบอร์ดสรุปผล</span>
+        </button>
+        <button onclick="switchTab('calendar')" id="tab-btn-calendar" class="nav-tab px-3.5 py-2 rounded-lg flex items-center space-x-1.5 transition-all text-slate-600 hover:bg-slate-100 whitespace-nowrap">
+          <i class="fas fa-calendar-alt text-sky-600"></i>
+          <span>ปฏิทินการใช้ห้อง</span>
+        </button>
+        <button onclick="switchTab('booking-form')" id="tab-btn-booking-form" class="nav-tab px-3.5 py-2 rounded-lg flex items-center space-x-1.5 transition-all text-slate-600 hover:bg-slate-100 whitespace-nowrap">
+          <i class="fas fa-edit text-amber-600"></i>
+          <span>ฟอร์มบันทึกคำขอจอง</span>
+        </button>
+        <button onclick="switchTab('approval-workflow')" id="tab-btn-approval-workflow" class="nav-tab px-3.5 py-2 rounded-lg flex items-center space-x-1.5 transition-all text-slate-600 hover:bg-slate-100 whitespace-nowrap">
+          <i class="fas fa-tasks text-emerald-600"></i>
+          <span>ขั้นตอนอนุมัติ 4 ลำดับ</span>
+        </button>
+        <button onclick="switchTab('official-reports')" id="tab-btn-official-reports" class="nav-tab px-3.5 py-2 rounded-lg flex items-center space-x-1.5 transition-all text-slate-600 hover:bg-slate-100 whitespace-nowrap">
+          <i class="fas fa-print text-indigo-600"></i>
+          <span>แบบฟอร์มราชการ A4 & ส่งออก</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTAINER ================= -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- TAB 1: DASHBOARD -->
+    <section id="tab-dashboard" class="tab-content block space-y-6">
+      <!-- 4 Stat Summary Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <!-- Card 1: วันนี้ -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:shadow-md transition-shadow relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-sky-500"></div>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">ใช้ห้องวันนี้</p>
+              <h3 id="statTodayCount" class="text-3xl font-extrabold text-slate-800 mt-1">0</h3>
+              <p class="text-xs text-sky-600 mt-1 flex items-center"><i class="fas fa-calendar-day mr-1"></i> รายการที่อนุมัติแล้ว</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-sky-50 flex items-center justify-center text-sky-600 text-xl">
+              <i class="fas fa-door-open"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: รออนุมัติ -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:shadow-md transition-shadow relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-amber-500"></div>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">รอตรวจสอบ & อนุมัติ</p>
+              <h3 id="statPendingCount" class="text-3xl font-extrabold text-amber-600 mt-1">0</h3>
+              <p class="text-xs text-amber-700 mt-1 flex items-center"><i class="fas fa-hourglass-half mr-1"></i> อยู่ในกระบวนการพิจารณา</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 text-xl">
+              <i class="fas fa-user-clock"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: อนุมัติแล้ว -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:shadow-md transition-shadow relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-emerald-500"></div>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">อนุมัติแล้ว (สำเร็จ)</p>
+              <h3 id="statApprovedCount" class="text-3xl font-extrabold text-emerald-600 mt-1">0</h3>
+              <p class="text-xs text-emerald-700 mt-1 flex items-center"><i class="fas fa-check-circle mr-1"></i> พร้อมเข้าใช้งานห้อง</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 text-xl">
+              <i class="fas fa-badge-check"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: รวมทั้งหมด -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:shadow-md transition-shadow relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-red-600"></div>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">คำขอทั้งหมดในระบบ</p>
+              <h3 id="statTotalCount" class="text-3xl font-extrabold text-red-600 mt-1">0</h3>
+              <p class="text-xs text-slate-500 mt-1 flex items-center"><i class="fas fa-database mr-1"></i> ข้อมูลสะสมทั้งหมด</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-red-600 text-xl">
+              <i class="fas fa-folder-open"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Room Status Showcase (6 Rooms) -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="font-bold text-slate-800 text-base flex items-center">
+              <i class="fas fa-building text-red-600 mr-2"></i> ข้อมูลห้องประชุมหลัก วิทยาลัยเทคนิคท่าหลวงซิเมนต์ไทยอนุสรณ์
+            </h3>
+            <p class="text-xs text-slate-500">ตรวจสอบสถานะความพร้อมและความจุของแต่ละห้อง</p>
+          </div>
+          <button onclick="switchTab('booking-form')" class="text-xs text-sky-600 hover:text-sky-800 font-semibold flex items-center">
+            เลือกจองห้อง <i class="fas fa-arrow-right ml-1"></i>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5" id="roomShowcaseGrid">
+          <!-- Room cards generated dynamically by js -->
+        </div>
+      </div>
+
+      <!-- Charts Section (Bar Chart & Donut Chart) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <!-- Room Usage Bar Chart -->
+        <div class="lg:col-span-7 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-bold text-slate-800 text-sm flex items-center">
+              <i class="fas fa-chart-bar text-sky-600 mr-2"></i> สถิติการใช้ห้องประชุมแต่ละห้อง
+            </h4>
+            <span class="text-xs bg-sky-50 text-sky-700 px-2 py-0.5 rounded font-medium">รวมการจอง</span>
+          </div>
+          <div class="h-64 relative">
+            <canvas id="roomUsageChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Equipment Donut Chart -->
+        <div class="lg:col-span-5 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-bold text-slate-800 text-sm flex items-center">
+              <i class="fas fa-chart-pie text-amber-500 mr-2"></i> สถิติการขอใช้อุปกรณ์/สิ่งอำนวยความสะดวก
+            </h4>
+            <span class="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded font-medium">ยอดนิยม</span>
+          </div>
+          <div class="h-64 relative flex items-center justify-center">
+            <canvas id="equipmentUsageChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Bookings Table -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-wrap justify-between items-center gap-3">
+          <div>
+            <h3 class="font-bold text-slate-800 text-base flex items-center">
+              <i class="fas fa-list-check text-red-600 mr-2"></i> รายการคำขอจองห้องประชุมล่าสุด
+            </h3>
+            <p class="text-xs text-slate-500">แสดงรายการจองและสถานะการอนุมัติ 4 ขั้นตอน</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <input type="text" id="dashboardSearchInput" oninput="filterDashboardTable()" placeholder="ค้นหาชื่อผู้ขอ, ห้อง, วัตถุประสงค์..." class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-sky-500 focus:outline-none w-44 sm:w-60">
+            <button onclick="openGoogleSheetsViewer()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center">
+              <i class="fab fa-google-drive mr-1.5 text-emerald-200"></i> ดู Google Sheets
+            </button>
+            <button onclick="exportService.exportCSV()" class="bg-slate-700 hover:bg-slate-800 text-white px-2.5 py-1.5 rounded-lg text-xs font-medium shadow-sm transition-all flex items-center">
+              <i class="fas fa-file-excel mr-1"></i> CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead>
+              <tr class="bg-slate-50 text-slate-600 border-b border-slate-200 text-xs uppercase font-semibold">
+                <th class="py-3 px-4">ลำดับ</th>
+                <th class="py-3 px-4">ห้องประชุม</th>
+                <th class="py-3 px-4">ผู้ขอใช้ / หน่วยงาน</th>
+                <th class="py-3 px-4">วันที่ & เวลาใช้งาน</th>
+                <th class="py-3 px-4">วัตถุประสงค์</th>
+                <th class="py-3 px-4 text-center">สถานะการอนุมัติ</th>
+                <th class="py-3 px-4 text-center">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="dashboardBookingsTbody" class="divide-y divide-slate-100 text-slate-700">
+              <!-- Rows injected via js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: CALENDAR (FullCalendar) -->
+    <section id="tab-calendar" class="tab-content hidden space-y-5">
+      <!-- Calendar Controls & Legend -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h3 class="font-bold text-slate-800 text-base flex items-center">
+            <i class="fas fa-calendar-alt text-sky-600 mr-2"></i> ปฏิทินแสดงสถานะการใช้ห้องประชุม
+          </h3>
+          <p class="text-xs text-slate-500">คลิกที่กิจกรรมในปฏิทินเพื่อดูรายละเอียดการจองอย่างละเอียด</p>
+        </div>
+
+        <!-- Filter Dropdown -->
+        <div class="flex items-center space-x-3">
+          <label for="calendarRoomFilter" class="text-xs font-semibold text-slate-600 flex items-center">
+            <i class="fas fa-filter mr-1 text-slate-400"></i> กรองห้อง:
+          </label>
+          <select id="calendarRoomFilter" onchange="filterCalendarByRoom(this.value)" class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs bg-white focus:ring-2 focus:ring-sky-500 focus:outline-none">
+            <option value="ALL">-- แสดงทุกห้องประชุม --</option>
+            <option value="หอประชุมอดิเรกสาร">หอประชุมอดิเรกสาร</option>
+            <option value="ห้องประชุมสักทอง">ห้องประชุมสักทอง</option>
+            <option value="ห้องประชุมหน้าห้องผู้อำนวยการ">ห้องประชุมหน้าห้องผู้อำนวยการ</option>
+            <option value="ห้องประชุม (กาแฟ)">ห้องประชุม (กาแฟ)</option>
+            <option value="อาคารโดมเอนกประสงค์">อาคารโดมเอนกประสงค์</option>
+            <option value="ห้องคอมพิวเตอร์กลาง (ห้องโสต)">ห้องคอมพิวเตอร์กลาง (ห้องโสต)</option>
+            <option value="อื่นๆ">อื่นๆ</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Color Legend -->
+      <div class="bg-slate-100 rounded-xl p-3 flex flex-wrap items-center gap-3 text-xs">
+        <span class="font-semibold text-slate-600"><i class="fas fa-palette mr-1"></i> สัญลักษณ์สีห้อง:</span>
+        <span class="inline-flex items-center"><span class="w-3 h-3 rounded-full mr-1 bg-[#0284c7]"></span> อดิเรกสาร</span>
+        <span class="inline-flex items-center"><span class="w-3 h-3 rounded-full mr-1 bg-[#059669]"></span> สักทอง</span>
+        <span class="inline-flex items-center"><span class="w-3 h-3 rounded-full mr-1 bg-[#dc2626]"></span> หน้าห้อง ผอ.</span>
+        <span class="inline-flex items-center"><span class="w-3 h-3 rounded-full mr-1 bg-[#d97706]"></span> ห้องกาแฟ</span>
+        <span class="inline-flex items-center"><span class="w-3 h-3 rounded-full mr-1 bg-[#7c3aed]"></span> โดมเอนกประสงค์</span>
+        <span class="inline-flex items-center"><span class="w-3 h-3 rounded-full mr-1 bg-[#0891b2]"></span> คอมพิวเตอร์กลาง (โสต)</span>
+        <span class="inline-flex items-center"><span class="w-3 h-3 rounded-full mr-1 bg-[#64748b]"></span> อื่นๆ</span>
+      </div>
+
+      <!-- Calendar Mount Element -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6">
+        <div id="fullCalendarEl" class="min-h-[650px]"></div>
+      </div>
+    </section>
+
+    <!-- TAB 3: BOOKING FORM & REAL-TIME CONFLICT DETECTION -->
+    <section id="tab-booking-form" class="tab-content hidden space-y-6">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <!-- Form Header -->
+        <div class="bg-gradient-to-r from-red-700 via-sky-800 to-amber-600 p-5 text-white">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl">
+              <i class="fas fa-file-signature"></i>
+            </div>
+            <div>
+              <h2 class="text-lg font-bold">แบบฟอร์มขอใช้ห้องประชุมและสิ่งอำนวยความสะดวก</h2>
+              <p class="text-xs text-sky-100">กรุณากรอกข้อมูลให้ครบถ้วน ระบบจะตรวจสอบความซ้ำซ้อนของห้องแบบ Real-time ทันที</p>
+            </div>
+          </div>
+        </div>
+
+        <form id="bookingForm" onsubmit="handleBookingFormSubmit(event)" class="p-6 space-y-6">
+          
+          <!-- REAL-TIME CONFLICT ALERT BOX (DYNAMICTALLY SHOWN) -->
+          <div id="conflictAlertBox" class="hidden transition-all duration-300">
+            <!-- Alert content injected via js -->
+          </div>
+
+          <!-- Section 1: ข้อมูลผู้ขอใช้ -->
+          <div>
+            <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 pb-1 border-b border-slate-200 flex items-center">
+              <i class="fas fa-user-tie text-red-600 mr-2"></i> 1. ข้อมูลผู้ขอใช้ห้องประชุม
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">ชื่อ-นามสกุล <span class="text-red-500">*</span></label>
+                <input type="text" id="formRequesterName" required placeholder="เช่น นายวัชรพงศ์ โสภา" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">ตำแหน่ง <span class="text-red-500">*</span></label>
+                <input type="text" id="formRequesterPosition" required placeholder="เช่น ครู / เจ้าหน้าที่งานศูนย์ดิจิทัลฯ" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">หน่วยงาน / สาขาวิชา <span class="text-red-500">*</span></label>
+                <input type="text" id="formRequesterDept" required placeholder="เช่น งานศูนย์ดิจิทัลและสื่อสารองค์กร / แผนกช่างยนต์" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">หมายเลขโทรศัพท์ติดต่อ <span class="text-red-500">*</span></label>
+                <input type="tel" id="formRequesterPhone" required placeholder="เช่น 081-234-5678" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: รายละเอียดการจองห้อง -->
+          <div>
+            <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 pb-1 border-b border-slate-200 flex items-center">
+              <i class="fas fa-door-open text-sky-600 mr-2"></i> 2. รายละเอียดการขอใช้ห้องประชุม
+            </h3>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <!-- เลือกห้องประชุม -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">ห้องประชุมที่ต้องการจอง <span class="text-red-500">*</span></label>
+                <select id="formRoomSelect" required onchange="onFormDateTimeChange()" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white">
+                  <option value="">-- กรุณาเลือกห้องประชุม --</option>
+                  <option value="หอประชุมอดิเรกสาร">หอประชุมอดิเรกสาร (ความจุ 500-800 คน)</option>
+                  <option value="ห้องประชุมสักทอง">ห้องประชุมสักทอง (ความจุ 50-80 คน)</option>
+                  <option value="ห้องประชุมหน้าห้องผู้อำนวยการ">ห้องประชุมหน้าห้องผู้อำนวยการ (ความจุ 20-30 คน)</option>
+                  <option value="ห้องประชุม (กาแฟ)">ห้องประชุม (กาแฟ) (ความจุ 15-20 คน)</option>
+                  <option value="อาคารโดมเอนกประสงค์">อาคารโดมเอนกประสงค์ (ความจุ 1,000+ คน)</option>
+                  <option value="ห้องคอมพิวเตอร์กลาง (ห้องโสต)">ห้องคอมพิวเตอร์กลาง (ห้องโสต) (ความจุ 40-60 คน)</option>
+                  <option value="อื่นๆ">อื่นๆ (โปรดระบุ)</option>
+                </select>
+              </div>
+
+              <!-- ระบุห้องอื่นๆ (ซ่อน/แสดง) -->
+              <div id="formOtherRoomContainer" class="hidden">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">ระบุชื่อห้องประชุมเพิ่มเติม <span class="text-red-500">*</span></label>
+                <input type="text" id="formOtherRoomText" placeholder="ระบุชื่อสถานที่/ห้องที่ต้องการ" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+              </div>
+
+              <!-- จำนวนผู้เข้าใช้ -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">จำนวนผู้เข้าใช้ห้อง (โดยประมาณ) <span class="text-red-500">*</span></label>
+                <div class="relative">
+                  <input type="number" id="formAttendees" required min="1" max="2500" placeholder="เช่น 45" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none pr-10">
+                  <span class="absolute right-3 top-2 text-xs text-slate-400">คน</span>
+                </div>
+              </div>
+
+              <!-- วัตถุประสงค์ -->
+              <div class="sm:col-span-2 lg:col-span-3">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">วัตถุประสงค์ในการขอใช้ห้อง <span class="text-red-500">*</span></label>
+                <textarea id="formPurpose" required rows="2" placeholder="ระบุวัตถุประสงค์และรายละเอียดการจัดประชุม/กิจกรรม เช่น การประชุมคณะกรรมการสถานศึกษา, อบรมเชิงปฏิบัติการ AI..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"></textarea>
+              </div>
+
+              <!-- วันที่เริ่ม -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">วันที่เริ่มใช้งาน <span class="text-red-500">*</span></label>
+                <input type="date" id="formStartDate" required onchange="onFormDateTimeChange()" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+              </div>
+
+              <!-- วันที่สิ้นสุด -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">วันที่สิ้นสุด <span class="text-red-500">*</span></label>
+                <input type="date" id="formEndDate" required onchange="onFormDateTimeChange()" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+              </div>
+
+              <!-- เวลาเริ่ม & สิ้นสุด -->
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">เวลาเริ่ม <span class="text-red-500">*</span></label>
+                  <input type="time" id="formStartTime" required value="08:30" onchange="onFormDateTimeChange()" class="w-full border border-slate-300 rounded-lg px-2 py-2 text-xs sm:text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">เวลาสิ้นสุด <span class="text-red-500">*</span></label>
+                  <input type="time" id="formEndTime" required value="16:30" onchange="onFormDateTimeChange()" class="w-full border border-slate-300 rounded-lg px-2 py-2 text-xs sm:text-sm focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: ครุภัณฑ์/อุปกรณ์/สิ่งอำนวยความสะดวก -->
+          <div>
+            <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 pb-1 border-b border-slate-200 flex items-center">
+              <i class="fas fa-toolbox text-amber-500 mr-2"></i> 3. ครุภัณฑ์ / อุปกรณ์ / สิ่งอำนวยความสะดวกที่ขอใช้งาน
+            </h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <!-- Projector -->
+              <label class="flex items-start space-x-2.5 p-2 rounded-lg bg-white border border-slate-200 hover:border-sky-400 cursor-pointer transition-colors">
+                <input type="checkbox" id="equipProjector" class="mt-0.5 rounded text-sky-600 focus:ring-sky-500 h-4 w-4">
+                <div class="text-xs">
+                  <span class="font-semibold text-slate-700 flex items-center"><i class="fas fa-video text-sky-600 mr-1.5"></i> เครื่องฉายภาพ (Projector/จอ LED)</span>
+                  <p class="text-slate-400 text-[11px]">รวมสายสัญญาณ HDMI / ตัวแปลง</p>
+                </div>
+              </label>
+
+              <!-- Sound System -->
+              <label class="flex items-start space-x-2.5 p-2 rounded-lg bg-white border border-slate-200 hover:border-sky-400 cursor-pointer transition-colors">
+                <input type="checkbox" id="equipSound" class="mt-0.5 rounded text-sky-600 focus:ring-sky-500 h-4 w-4">
+                <div class="text-xs">
+                  <span class="font-semibold text-slate-700 flex items-center"><i class="fas fa-volume-high text-sky-600 mr-1.5"></i> ระบบเสียง / เครื่องเสียง</span>
+                  <p class="text-slate-400 text-[11px]">ชุดแอมป์และลำโพงประจำห้อง</p>
+                </div>
+              </label>
+
+              <!-- Microphones -->
+              <div class="p-2 rounded-lg bg-white border border-slate-200 flex flex-col justify-between">
+                <label class="flex items-start space-x-2.5 cursor-pointer">
+                  <input type="checkbox" id="equipMic" onchange="toggleMicInput(this.checked)" class="mt-0.5 rounded text-sky-600 focus:ring-sky-500 h-4 w-4">
+                  <div class="text-xs">
+                    <span class="font-semibold text-slate-700 flex items-center"><i class="fas fa-microphone text-sky-600 mr-1.5"></i> ไมโครโฟน (ไร้สาย/สาย)</span>
+                  </div>
+                </label>
+                <div id="micCountContainer" class="hidden mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span class="text-slate-500 text-[11px]">จำนวนตัว:</span>
+                  <input type="number" id="equipMicCount" value="2" min="1" max="20" class="w-16 border border-slate-300 rounded px-1.5 py-0.5 text-center text-xs">
+                </div>
+              </div>
+
+              <!-- Air Conditioning -->
+              <label class="flex items-start space-x-2.5 p-2 rounded-lg bg-white border border-slate-200 hover:border-sky-400 cursor-pointer transition-colors">
+                <input type="checkbox" id="equipAir" checked class="mt-0.5 rounded text-sky-600 focus:ring-sky-500 h-4 w-4">
+                <div class="text-xs">
+                  <span class="font-semibold text-slate-700 flex items-center"><i class="fas fa-snowflake text-sky-600 mr-1.5"></i> เครื่องปรับอากาศ</span>
+                  <p class="text-slate-400 text-[11px]">เปิดล่วงหน้า 15 นาทีก่อนเริ่ม</p>
+                </div>
+              </label>
+
+              <!-- Internet -->
+              <label class="flex items-start space-x-2.5 p-2 rounded-lg bg-white border border-slate-200 hover:border-sky-400 cursor-pointer transition-colors">
+                <input type="checkbox" id="equipInternet" checked class="mt-0.5 rounded text-sky-600 focus:ring-sky-500 h-4 w-4">
+                <div class="text-xs">
+                  <span class="font-semibold text-slate-700 flex items-center"><i class="fas fa-wifi text-sky-600 mr-1.5"></i> อินเทอร์เน็ต / Wi-Fi</span>
+                  <p class="text-slate-400 text-[11px]">เครือข่ายความเร็วสูงของวิทยาลัย</p>
+                </div>
+              </label>
+
+              <!-- Tables / Chairs -->
+              <div class="p-2 rounded-lg bg-white border border-slate-200 flex flex-col justify-between">
+                <label class="flex items-start space-x-2.5 cursor-pointer">
+                  <input type="checkbox" id="equipFurniture" onchange="toggleFurnitureInput(this.checked)" class="mt-0.5 rounded text-sky-600 focus:ring-sky-500 h-4 w-4">
+                  <div class="text-xs">
+                    <span class="font-semibold text-slate-700 flex items-center"><i class="fas fa-chair text-sky-600 mr-1.5"></i> โต๊ะ / เก้าอี้ เพิ่มเติม</span>
+                  </div>
+                </label>
+                <div id="furnitureCountContainer" class="hidden mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span class="text-slate-500 text-[11px]">จำนวน (ชุด/ตัว):</span>
+                  <input type="number" id="equipFurnitureCount" value="10" min="1" max="300" class="w-16 border border-slate-300 rounded px-1.5 py-0.5 text-center text-xs">
+                </div>
+              </div>
+
+              <!-- Other Equipment -->
+              <div class="sm:col-span-2 lg:col-span-3 p-2 rounded-lg bg-white border border-slate-200">
+                <label class="block text-xs font-semibold text-slate-700 mb-1 flex items-center">
+                  <i class="fas fa-plus-circle text-amber-500 mr-1.5"></i> ครุภัณฑ์/ความต้องการอื่นๆ เพิ่มเติม (ถ้ามี)
+                </label>
+                <input type="text" id="equipOther" placeholder="เช่น โพเดียม, ป้ายโฟมต้อนรับ, จุดชงกาแฟ/อาหารว่าง, ถ่ายทอดสด..." class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:ring-2 focus:ring-sky-500 focus:outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Buttons -->
+          <div class="pt-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+            <button type="button" onclick="fillMockBookingForm()" class="text-xs text-slate-500 hover:text-slate-800 underline">
+              <i class="fas fa-magic mr-1"></i> เติมข้อมูลตัวอย่างสำหรับการทดสอบ (Auto-fill Demo)
+            </button>
+            <div class="flex items-center space-x-3">
+              <button type="reset" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                ล้างข้อมูล
+              </button>
+              <button type="submit" id="submitBookingBtn" class="bg-gradient-to-r from-red-600 via-red-700 to-sky-700 hover:from-red-700 hover:to-sky-800 text-white px-6 py-2.5 rounded-lg text-sm font-semibold shadow-md transition-all flex items-center">
+                <i class="fas fa-paper-plane mr-2"></i> บันทึกและส่งคำขอจองห้องประชุม
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- TAB 4: MULTI-LEVEL APPROVAL WORKFLOW (4 STEPS) -->
+    <section id="tab-approval-workflow" class="tab-content hidden space-y-6">
+      <!-- Workflow Explanation Card -->
+      <div class="bg-gradient-to-br from-slate-900 via-sky-950 to-red-950 text-white rounded-xl shadow-md p-6 relative overflow-hidden">
+        <div class="relative z-10">
+          <div class="flex items-center justify-between mb-3">
+            <span class="bg-amber-400 text-slate-950 text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">Multi-Level Workflow</span>
+            <span class="text-xs text-sky-200">วิทยาลัยเทคนิคท่าหลวงซิเมนต์ไทยอนุสรณ์</span>
+          </div>
+          <h2 class="text-xl font-bold mb-2">ระบบอนุมัติคำขอใช้ห้องประชุมตามลำดับขั้นราชการ (4 ขั้นตอน)</h2>
+          <p class="text-xs text-slate-300 max-w-3xl leading-relaxed">
+            ทุกคำขอจะต้องผ่านการตรวจสอบความพร้อมของห้องและอุปกรณ์ โดยเจ้าหน้าที่งานศูนย์ดิจิทัลฯ รับรองโดยหัวหน้างาน และอนุมัติขั้นสุดท้ายโดยรองผู้อำนวยการ
+          </p>
+
+          <!-- 4 Steps Flow Visual -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mt-6">
+            <!-- Step 1 -->
+            <div class="bg-white/10 backdrop-blur-md rounded-lg p-3 border border-white/20">
+              <div class="flex items-center space-x-2 text-amber-300 font-bold text-xs mb-1">
+                <span class="w-5 h-5 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center text-[10px]">1</span>
+                <span>ผู้ขอใช้ยื่นคำขอ</span>
+              </div>
+              <p class="text-[11px] text-slate-300">ครู/บุคลากร กรอกข้อมูลและยื่นผ่านระบบออนไลน์</p>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="bg-white/10 backdrop-blur-md rounded-lg p-3 border border-white/20">
+              <div class="flex items-center space-x-2 text-sky-300 font-bold text-xs mb-1">
+                <span class="w-5 h-5 rounded-full bg-sky-400 text-slate-950 flex items-center justify-center text-[10px]">2</span>
+                <span>เจ้าหน้าที่ตรวจสอบห้อง</span>
+              </div>
+              <p class="text-[11px] text-slate-200 font-medium">นายวัชรพงศ์ โสภา</p>
+              <p class="text-[10px] text-slate-400">เจ้าหน้าที่งานศูนย์ดิจิทัลและสื่อสารองค์กร (ตรวจความพร้อม)</p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="bg-white/10 backdrop-blur-md rounded-lg p-3 border border-white/20">
+              <div class="flex items-center space-x-2 text-emerald-300 font-bold text-xs mb-1">
+                <span class="w-5 h-5 rounded-full bg-emerald-400 text-slate-950 flex items-center justify-center text-[10px]">3</span>
+                <span>หัวหน้างานรับรอง</span>
+              </div>
+              <p class="text-[11px] text-slate-200 font-medium">นายเอกราช เขียวทอง</p>
+              <p class="text-[10px] text-slate-400">หัวหน้างานศูนย์ดิจิทัลและสื่อสารองค์กร (ลงนามรับรอง)</p>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="bg-white/10 backdrop-blur-md rounded-lg p-3 border border-white/20">
+              <div class="flex items-center space-x-2 text-rose-300 font-bold text-xs mb-1">
+                <span class="w-5 h-5 rounded-full bg-rose-400 text-slate-950 flex items-center justify-center text-[10px]">4</span>
+                <span>รองผู้อำนวยการอนุมัติ</span>
+              </div>
+              <p class="text-[11px] text-slate-200 font-medium">นายชาตรี เริงชัยภูมิ</p>
+              <p class="text-[10px] text-slate-400">รอง ผอ. ฝ่ายพัฒนายุทธศาสตร์และแผนงาน (อนุมัติ)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Bar for Approvals -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center space-x-2">
+          <span class="text-xs font-semibold text-slate-600">แสดงรายการ:</span>
+          <button onclick="filterApprovalView('ALL')" id="filterAppBtn-ALL" class="approval-filter-btn px-3 py-1 rounded-lg text-xs font-medium bg-red-600 text-white">ทั้งหมด</button>
+          <button onclick="filterApprovalView('PENDING')" id="filterAppBtn-PENDING" class="approval-filter-btn px-3 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200">รอพิจารณา</button>
+          <button onclick="filterApprovalView('APPROVED')" id="filterAppBtn-APPROVED" class="approval-filter-btn px-3 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200">อนุมัติแล้ว</button>
+          <button onclick="filterApprovalView('REJECTED')" id="filterAppBtn-REJECTED" class="approval-filter-btn px-3 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200">ไม่อนุมัติ</button>
+        </div>
+
+        <div class="text-xs text-slate-500 flex items-center">
+          <i class="fas fa-info-circle text-sky-500 mr-1.5"></i> คลิกที่ปุ่ม "พิจารณา / อนุมัติ" ของแต่ละคำขอเพื่อบันทึกลายเซ็นและความเห็น
+        </div>
+      </div>
+
+      <!-- Approval Cards Container -->
+      <div id="approvalCardsList" class="space-y-4">
+        <!-- Rendered by js -->
+      </div>
+    </section>
+
+    <!-- TAB 5: OFFICIAL REPORTS & A4 PRINT & EXPORT -->
+    <section id="tab-official-reports" class="tab-content hidden space-y-6">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+        <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <h3 class="font-bold text-slate-800 text-base flex items-center">
+              <i class="fas fa-file-pdf text-red-600 mr-2"></i> ศูนย์เอกสารราชการและพิมพ์แบบฟอร์ม A4
+            </h3>
+            <p class="text-xs text-slate-500">พิมพ์แบบคำขอใช้ห้องประชุมมาตรฐานราชการตามโครงสร้างของวิทยาลัยเทคนิคท่าหลวงซิเมนต์ไทยอนุสรณ์</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="exportService.exportCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg text-xs font-medium shadow-sm transition-all flex items-center">
+              <i class="fas fa-file-csv mr-1.5"></i> ส่งออก CSV (UTF-8 BOM ภาษาไทย)
+            </button>
+            <button onclick="exportService.exportExcelHTML()" class="bg-green-700 hover:bg-green-800 text-white px-3.5 py-2 rounded-lg text-xs font-medium shadow-sm transition-all flex items-center">
+              <i class="fas fa-file-excel mr-1.5"></i> ส่งออก Excel สมบูรณ์
+            </button>
+          </div>
+        </div>
+
+        <!-- Table to pick any booking to print -->
+        <div class="mt-4 overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead>
+              <tr class="bg-slate-50 text-slate-600 border-b border-slate-200 uppercase font-semibold text-xs">
+                <th class="py-3 px-4">เลขที่คำขอ</th>
+                <th class="py-3 px-4">ห้องประชุม</th>
+                <th class="py-3 px-4">ผู้ขอใช้</th>
+                <th class="py-3 px-4">วันที่ใช้งาน</th>
+                <th class="py-3 px-4">สถานะคำขอ</th>
+                <th class="py-3 px-4 text-center">พิมพ์แบบคำขอ A4</th>
+              </tr>
+            </thead>
+            <tbody id="officialReportsTbody" class="divide-y divide-slate-100">
+              <!-- Rendered via js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 6: SETTINGS, GOOGLE SHEETS & WEBHOOK (เข้าใช้งานผ่านปุ่ม Settings ⚙️) -->
+    <section id="tab-settings" class="tab-content hidden space-y-6">
+      
+      <!-- Settings Header with Back Button -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5 flex flex-wrap justify-between items-center gap-3">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700 text-lg">
+            <i class="fas fa-cog"></i>
+          </div>
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-800">การตั้งค่าระบบ (Settings & Database)</h2>
+            <p class="text-xs text-slate-500">จัดการการเชื่อมต่อ Google Sheets Database, ระบบแจ้งเตือน Webhook, และรีเซ็ตระบบ</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="openGoogleSheetsViewer()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center">
+            <i class="fab fa-google-drive mr-1.5"></i> เปิดดู Google Sheets
+          </button>
+          <button onclick="switchTab('dashboard')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center">
+            <i class="fas fa-arrow-left mr-1.5"></i> กลับหน้าแดชบอร์ด
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Google Sheets Cloud Integration -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
+          <div class="flex items-center space-x-3 pb-3 border-b border-slate-100">
+            <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+              <i class="fab fa-google-drive"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 text-base">การเชื่อมต่อ Google Sheets Database</h3>
+              <p class="text-xs text-slate-500">ซิงค์ข้อมูลกับ Google Sheets แบบ Real-time ผ่าน Web App URL</p>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Google Apps Script Web App URL</label>
+              <input type="url" id="googleWebAppUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono">
+              <p class="text-[11px] text-slate-400 mt-1">นำ URL ที่ได้จากการ Deploy Web App ใน Google Apps Script มาใส่ที่นี่</p>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Google Sheet Online URL (สำหรับเปิดดูแผ่นงาน)</label>
+              <input type="url" id="googleSheetOnlineUrlInput" placeholder="https://docs.google.com/spreadsheets/d/.../edit" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono">
+              <p class="text-[11px] text-slate-400 mt-1">ลิงก์ Google Sheets สำหรับให้บุคลากรเปิดดูในเบราว์เซอร์</p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 pt-2">
+              <button onclick="saveGoogleSheetsConfig()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center">
+                <i class="fas fa-save mr-1.5"></i> บันทึกการเชื่อมต่อ
+              </button>
+              <button onclick="testGoogleSheetsSync()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center">
+                <i class="fas fa-sync-alt mr-1.5"></i> ทดสอบดึงข้อมูล (Sync)
+              </button>
+              <button onclick="openAppsScriptModal()" class="text-emerald-700 hover:text-emerald-800 text-xs font-medium underline ml-auto">
+                <i class="fas fa-code mr-1"></i> ดูโค้ด Apps Script
+              </button>
+            </div>
+
+            <div class="pt-2 border-t border-slate-100 flex flex-wrap gap-2">
+              <button onclick="openGoogleSheetsViewer()" class="bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center">
+                <i class="fas fa-table mr-1 text-emerald-600"></i> เปิดดูชีตในหน้าเว็บ
+              </button>
+              <button onclick="openGoogleSheetOnlineDirect()" class="bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center">
+                <i class="fas fa-external-link-alt mr-1 text-slate-500"></i> เปิดชีตในแท็บใหม่
+              </button>
+              <button onclick="openGoogleSheetTemplateCopy()" class="bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-300 px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center">
+                <i class="fas fa-copy mr-1 text-amber-600"></i> คัดลอกเทมเพลตเข้า Drive
+              </button>
+            </div>
+
+            <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-800">
+              <p class="font-bold flex items-center"><i class="fas fa-check-circle mr-1.5 text-emerald-600"></i> ทำงานได้ทั้งแบบ LocalStorage และ Google Sheets</p>
+              <p class="text-[11px] text-emerald-700 mt-0.5">หากยังไม่ได้เชื่อมต่อ Google Sheets ระบบจะบันทึกข้อมูลใน Browser (LocalStorage) พร้อมใช้งานได้ทันที 100%</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real-Time Webhooks (Telegram / Discord / Google Chat) -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
+          <div class="flex items-center space-x-3 pb-3 border-b border-slate-100">
+            <div class="w-10 h-10 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center text-xl">
+              <i class="fas fa-bell"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 text-base">ระบบแจ้งเตือน Real-Time Webhook</h3>
+              <p class="text-xs text-slate-500">ส่งแจ้งเตือนเข้า Telegram, Discord, Line หรือ Google Chat เมื่อมีการจอง/อนุมัติ</p>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Webhook Provider</label>
+              <select id="webhookProviderSelect" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-sky-500 focus:outline-none bg-white">
+                <option value="discord">Discord Webhook</option>
+                <option value="telegram">Telegram Bot Webhook</option>
+                <option value="google_chat">Google Chat Webhook</option>
+                <option value="custom">Custom Webhook API (JSON POST)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Webhook URL</label>
+              <input type="url" id="webhookUrlInput" placeholder="https://discord.com/api/webhooks/... หรือ https://chat.googleapis.com/..." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-sky-500 focus:outline-none">
+            </div>
+
+            <div class="flex items-center space-x-2 pt-2">
+              <button onclick="saveWebhookConfig()" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center">
+                <i class="fas fa-save mr-1.5"></i> บันทึก Webhook
+              </button>
+              <button onclick="testWebhookTrigger()" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-lg text-xs font-medium shadow-sm transition-all flex items-center">
+                <i class="fas fa-paper-plane mr-1.5"></i> ยิงทดสอบแจ้งเตือน
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Reset / Sample Data -->
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <h3 class="font-bold text-slate-800 text-base mb-2 flex items-center">
+            <i class="fas fa-database text-red-600 mr-2"></i> จัดการฐานข้อมูลและรีเซ็ตระบบ
+          </h3>
+          <p class="text-xs text-slate-500 mb-4">สำหรับทดสอบการใช้งาน สามารถเติมข้อมูลตัวอย่าง หรือล้างข้อมูลทั้งหมดเพื่อเริ่มระบบใหม่</p>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <button onclick="resetToSampleData()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center">
+              <i class="fas fa-sync-alt mr-1.5 text-amber-400"></i> โหลดข้อมูลตัวอย่างใหม่ (Load Demo Data)
+            </button>
+            <button onclick="clearAllData()" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center">
+              <i class="fas fa-trash-alt mr-1.5"></i> ล้างข้อมูลการจองทั้งหมด
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="bg-white border-t border-slate-200 py-6 text-slate-500 text-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-3">
+      <div class="flex items-center space-x-2">
+        <span class="font-bold text-red-700">วิทยาลัยเทคนิคท่าหลวงซิเมนต์ไทยอนุสรณ์</span>
+        <span>•</span>
+        <span>งานศูนย์ดิจิทัลและสื่อสารองค์กร</span>
+      </div>
+      <div>
+        <span>ระบบจองห้องประชุมออนไลน์ (Smart Meeting Room Booking System) v1.0 • GitHub Pages Ready</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= MODAL: EVENT DETAILS (FullCalendar click) ================= -->
+  <div id="eventDetailModal" class="fixed inset-0 z-50 hidden overflow-y-auto modal-backdrop bg-slate-900/60 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-100 transform transition-all">
+      <div id="modalHeaderGradient" class="bg-gradient-to-r from-red-600 to-sky-700 p-5 text-white flex justify-between items-start">
+        <div>
+          <span id="modalRoomBadge" class="bg-white/20 backdrop-blur-sm text-white text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">ห้องประชุม</span>
+          <h3 id="modalEventTitle" class="text-base sm:text-lg font-bold mt-1">รายละเอียดการจอง</h3>
+          <p id="modalBookingId" class="text-xs text-sky-100 font-mono mt-0.5"></p>
+        </div>
+        <button onclick="closeModal('eventDetailModal')" class="text-white/80 hover:text-white text-lg p-1">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4 text-xs sm:text-sm text-slate-700 max-h-[75vh] overflow-y-auto">
+        <!-- Requester -->
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+          <p class="text-xs text-slate-400 font-semibold uppercase">ผู้ขอใช้ห้อง</p>
+          <p id="modalRequester" class="font-bold text-slate-800 text-sm mt-0.5"></p>
+          <p id="modalDeptPos" class="text-xs text-slate-500"></p>
+          <p id="modalPhone" class="text-xs text-sky-600 mt-1"></p>
+        </div>
+
+        <!-- Schedule & Attendees -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <p class="text-xs text-slate-400 font-semibold uppercase">วันและเวลา</p>
+            <p id="modalDate" class="font-semibold text-slate-800 mt-0.5"></p>
+            <p id="modalTime" class="text-xs text-red-600 font-medium"></p>
+          </div>
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <p class="text-xs text-slate-400 font-semibold uppercase">ผู้เข้าใช้</p>
+            <p id="modalAttendees" class="font-semibold text-slate-800 mt-0.5"></p>
+            <p id="modalStatusBadge" class="mt-1"></p>
+          </div>
+        </div>
+
+        <!-- Purpose -->
+        <div>
+          <p class="text-xs text-slate-400 font-semibold uppercase">วัตถุประสงค์</p>
+          <p id="modalPurpose" class="mt-1 bg-amber-50/60 p-2.5 rounded-lg border border-amber-200/60 text-slate-800"></p>
+        </div>
+
+        <!-- Facilities -->
+        <div>
+          <p class="text-xs text-slate-400 font-semibold uppercase mb-1">อุปกรณ์และสิ่งอำนวยความสะดวก</p>
+          <div id="modalFacilitiesList" class="flex flex-wrap gap-1.5"></div>
+        </div>
+
+        <!-- Approvals Timeline -->
+        <div>
+          <p class="text-xs text-slate-400 font-semibold uppercase mb-2">สถานะการพิจารณา 4 ขั้นตอน</p>
+          <div id="modalApprovalTimeline" class="space-y-2 border-l-2 border-slate-200 ml-2 pl-3"></div>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 px-5 py-3 border-t border-slate-100 flex justify-between items-center">
+        <button id="modalPrintA4Btn" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center">
+          <i class="fas fa-print mr-1.5"></i> พิมพ์แบบฟอร์ม A4
+        </button>
+        <button onclick="closeModal('eventDetailModal')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-1.5 rounded-lg text-xs font-medium transition-colors">
+          ปิดหน้าต่าง
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: APPROVAL ACTION (Sign & Confirm) ================= -->
+  <div id="approvalActionModal" class="fixed inset-0 z-50 hidden overflow-y-auto modal-backdrop bg-slate-900/60 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-100">
+      <div class="bg-gradient-to-r from-sky-800 to-red-800 p-4 text-white flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+          <i class="fas fa-stamp text-amber-400 text-lg"></i>
+          <h3 id="approvalModalTitle" class="font-bold text-sm sm:text-base">บันทึกผลการพิจารณาคำขอ</h3>
+        </div>
+        <button onclick="closeModal('approvalActionModal')" class="text-white/80 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form id="approvalActionForm" onsubmit="handleApprovalActionSubmit(event)" class="p-5 space-y-4 text-xs sm:text-sm">
+        <input type="hidden" id="approvalBookingId">
+        <input type="hidden" id="approvalStepNumber">
+
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <p class="text-xs text-slate-500 font-medium">คำขอจองห้อง:</p>
+          <p id="approvalTargetDetails" class="font-bold text-slate-800 mt-0.5"></p>
+        </div>
+
+        <!-- Approver Role Selector / Info -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">ผู้พิจารณาตามลำดับขั้น</label>
+          <div id="approvalOfficialDisplay" class="bg-sky-50 border border-sky-200 rounded-lg p-2.5 text-xs text-sky-900 font-medium"></div>
+        </div>
+
+        <!-- Decision: Approve or Reject -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">ผลการพิจารณา <span class="text-red-500">*</span></label>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="flex items-center space-x-2 p-2.5 border rounded-lg cursor-pointer hover:bg-emerald-50 border-emerald-300">
+              <input type="radio" name="approvalDecision" value="APPROVED" checked class="text-emerald-600 focus:ring-emerald-500">
+              <span class="text-xs font-bold text-emerald-700" id="approvalRadioApproveLabel">อนุมัติ / พร้อมใช้งาน / รับรอง</span>
+            </label>
+            <label class="flex items-center space-x-2 p-2.5 border rounded-lg cursor-pointer hover:bg-red-50 border-red-300">
+              <input type="radio" name="approvalDecision" value="REJECTED" class="text-red-600 focus:ring-red-500">
+              <span class="text-xs font-bold text-red-700" id="approvalRadioRejectLabel">ไม่อนุมัติ / ไม่พร้อม</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Comments -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">ความเห็น / หมายเหตุประกอบการพิจารณา</label>
+          <textarea id="approvalComment" rows="2" placeholder="ระบุความเห็นหรือเงื่อนไขเพิ่มเติม (ถ้ามี)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-sky-500 focus:outline-none"></textarea>
+        </div>
+
+        <!-- Digital Signature Canvas -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs font-semibold text-slate-700">ลายมือชื่อดิจิทัล (เซ็นชื่อในกรอบด้านล่าง)</label>
+            <button type="button" onclick="clearSignaturePad()" class="text-[11px] text-red-600 hover:text-red-800 underline">ล้างลายเซ็น</button>
+          </div>
+          <div class="bg-white rounded-lg p-1 border border-slate-300">
+            <canvas id="signaturePadCanvas" class="signature-pad w-full h-24" width="450" height="96"></canvas>
+          </div>
+          <p class="text-[10px] text-slate-400 mt-1">* สามารถใช้เมาส์หรือนิ้วแตะสัมผัสหน้าจอเพื่อเซ็นชื่อได้โดยตรง</p>
+        </div>
+
+        <div class="pt-3 border-t border-slate-200 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('approvalActionModal')" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg">ยกเลิก</button>
+          <button type="submit" class="bg-sky-600 hover:bg-sky-700 text-white px-5 py-2 rounded-lg text-xs font-bold shadow transition-all flex items-center">
+            <i class="fas fa-check-circle mr-1.5"></i> บันทึกผลการพิจารณา
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: OFFICIAL A4 PRINT PREVIEW ================= -->
+  <div id="officialPrintModal" class="fixed inset-0 z-50 hidden overflow-y-auto modal-backdrop bg-slate-900/80 p-2 sm:p-6 flex justify-center items-start">
+    <div class="modal-content-wrapper relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full my-6 overflow-hidden">
+      <!-- Toolbar for screen (Hidden in Print) -->
+      <div class="no-print bg-slate-900 text-white p-4 flex flex-wrap justify-between items-center gap-3">
+        <div class="flex items-center space-x-2">
+          <i class="fas fa-print text-amber-400 text-lg"></i>
+          <span class="font-bold text-sm">แบบฟอร์มคำขออนุญาตใช้ห้องประชุม (มาตรฐานราชการ A4)</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="window.print()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow transition-all flex items-center">
+            <i class="fas fa-print mr-1.5"></i> พิมพ์เอกสาร (Print / PDF)
+          </button>
+          <button onclick="closeModal('officialPrintModal')" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors">
+            ปิด
+          </button>
+        </div>
+      </div>
+
+      <!-- Actual A4 Printable Document -->
+      <div id="printableA4Document" class="a4-page official-font">
+        <!-- Rendered by js/export.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: GOOGLE SHEETS LIVE VIEWER ================= -->
+  <div id="googleSheetsViewModal" class="fixed inset-0 z-50 hidden overflow-y-auto modal-backdrop bg-slate-900/70 p-2 sm:p-6 flex justify-center items-center">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[92vh] flex flex-col overflow-hidden border border-slate-200">
+      
+      <!-- Top Google Sheets Bar -->
+      <div class="bg-emerald-700 text-white px-4 py-3 flex flex-wrap justify-between items-center gap-2">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-emerald-700 shadow-sm">
+            <i class="fas fa-file-excel text-lg"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h3 class="font-bold text-sm sm:text-base leading-tight">Google Sheets - ฐานข้อมูลจองห้องประชุม วิทยาลัยเทคนิคท่าหลวงฯ</h3>
+              <span class="bg-emerald-800 text-emerald-100 text-[10px] px-2 py-0.5 rounded font-mono">Live Grid</span>
+            </div>
+            <p class="text-[11px] text-emerald-100">แผ่นงาน: <strong>Bookings</strong> • ซิงค์กับระบบแบบ Real-time</p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button onclick="openGoogleSheetOnlineDirect()" class="bg-emerald-600 hover:bg-emerald-800 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center" title="เปิดดูใน Google Sheets แท็บใหม่">
+            <i class="fas fa-external-link-alt mr-1.5"></i> เปิด Google Sheets จริง
+          </button>
+          <button onclick="openGoogleSheetTemplateCopy()" class="bg-amber-400 hover:bg-amber-500 text-slate-900 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all flex items-center" title="สร้างสำเนาเทมเพลตเข้า Google Drive ของคุณ">
+            <i class="fas fa-copy mr-1.5"></i> คัดลอกเทมเพลตเข้า Drive
+          </button>
+          <button onclick="refreshGoogleSheetsLiveView()" class="p-1.5 text-white/80 hover:text-white rounded-lg transition-colors" title="รีเฟรชตารางข้อมูล">
+            <i class="fas fa-sync-alt text-sm"></i>
+          </button>
+          <button onclick="closeModal('googleSheetsViewModal')" class="p-1.5 text-white/80 hover:text-white rounded-lg transition-colors text-lg">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Google Sheets Fake Menu / Toolbar (Looks authentic) -->
+      <div class="bg-slate-100 border-b border-slate-200 px-4 py-1.5 flex flex-wrap justify-between items-center text-xs text-slate-600">
+        <div class="flex items-center space-x-3 overflow-x-auto text-[11px]">
+          <span class="hover:bg-slate-200 px-2 py-0.5 rounded cursor-pointer">ไฟล์ (File)</span>
+          <span class="hover:bg-slate-200 px-2 py-0.5 rounded cursor-pointer">แก้ไข (Edit)</span>
+          <span class="hover:bg-slate-200 px-2 py-0.5 rounded cursor-pointer">มุมมอง (View)</span>
+          <span class="hover:bg-slate-200 px-2 py-0.5 rounded cursor-pointer">แทรก (Insert)</span>
+          <span class="hover:bg-slate-200 px-2 py-0.5 rounded cursor-pointer">รูปแบบ (Format)</span>
+          <span class="hover:bg-slate-200 px-2 py-0.5 rounded cursor-pointer">ข้อมูล (Data)</span>
+          <span class="hover:bg-slate-200 px-2 py-0.5 rounded cursor-pointer">ส่วนขยาย (Extensions)</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <input type="text" id="sheetSearchInput" oninput="filterSheetGridView(this.value)" placeholder="ค้นหาในชีต..." class="bg-white border border-slate-300 rounded px-2 py-0.5 text-[11px] focus:outline-none w-36">
+          <button onclick="exportService.exportCSV()" class="text-emerald-700 hover:text-emerald-900 text-[11px] font-semibold flex items-center">
+            <i class="fas fa-download mr-1"></i> ดาวน์โหลด CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- Formula Bar -->
+      <div class="bg-white border-b border-slate-200 px-4 py-1 flex items-center space-x-2 text-xs">
+        <span class="font-bold text-slate-400 font-serif italic text-xs">fx</span>
+        <div class="w-[1px] h-4 bg-slate-300"></div>
+        <span class="text-slate-500 font-mono text-[11px]" id="sheetFormulaDisplay">=COUNTA(A2:A) & " รายการจองห้องประชุมทั้งหมด"</span>
+      </div>
+
+      <!-- Spreadsheet Grid Area (Scrollable) -->
+      <div class="flex-1 overflow-auto bg-slate-50" style="max-height: 60vh;">
+        <table class="w-full text-left border-collapse text-[11px] font-mono select-none" id="sheetGridTable">
+          <!-- Rendered dynamically by js -->
+        </table>
+      </div>
+
+      <!-- Sheet Tabs Bar (Bottom like Google Sheets) -->
+      <div class="bg-slate-200 border-t border-slate-300 px-3 py-1.5 flex justify-between items-center text-xs">
+        <div class="flex items-center space-x-1">
+          <button class="bg-white border-t-2 border-emerald-600 px-3 py-1 rounded-t font-semibold text-emerald-800 text-[11px] shadow-sm flex items-center">
+            <i class="fas fa-table mr-1.5 text-emerald-600"></i> Bookings
+          </button>
+          <button onclick="switchTab('settings'); closeModal('googleSheetsViewModal');" class="text-slate-500 hover:text-slate-700 px-2 py-1 text-[11px] font-medium" title="ตั้งค่าเชื่อมต่อ Apps Script">
+            <i class="fas fa-cog mr-1"></i> ตั้งค่าเชื่อมต่อ Google Sheets API
+          </button>
+        </div>
+        <div class="text-[11px] text-slate-500 font-mono" id="sheetGridSummaryText">
+          กำลังโหลด...
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= MODAL: GOOGLE APPS SCRIPT CODE VIEWER ================= -->
+  <div id="appsScriptModal" class="fixed inset-0 z-50 hidden overflow-y-auto modal-backdrop bg-slate-900/60 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-3xl w-full shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[85vh]">
+      <div class="bg-emerald-700 text-white p-4 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+          <i class="fab fa-google-drive text-amber-300 text-lg"></i>
+          <h3 class="font-bold text-sm sm:text-base">Google Apps Script (Code.gs) สำหรับ Google Sheets</h3>
+        </div>
+        <button onclick="closeModal('appsScriptModal')" class="text-white/80 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="p-4 overflow-y-auto flex-1 text-xs">
+        <p class="text-slate-600 mb-2">คัดลอกโค้ดด้านล่างนี้ไปวางใน Google Sheets > ส่วนขยาย (Extensions) > Apps Script จากนั้นกด <strong>ทำให้ใช้งานได้ (Deploy) > การทำให้ใช้งานได้ใหม่ (New deployment)</strong> เลือก Web App (ให้สิทธิ์ทุกคนเข้าถึง Anyone):</p>
+        <div class="relative">
+          <button onclick="copyAppsScriptCode()" class="absolute top-2 right-2 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs shadow">
+            <i class="fas fa-copy mr-1"></i> คัดลอกโค้ด
+          </button>
+          <pre id="appsScriptCodePre" class="bg-slate-900 text-emerald-300 p-4 rounded-lg overflow-x-auto text-[11px] font-mono leading-relaxed h-96"></pre>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 p-3 border-t border-slate-200 flex justify-end">
+        <button onclick="closeModal('appsScriptModal')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-1.5 rounded-lg text-xs font-semibold">ปิด</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= NOTIFICATION TOAST CONTAINER ================= -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+  <!-- Load Application Scripts -->
+  <script src="js/sound.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
